@@ -10,21 +10,34 @@ from datetime import datetime
 from collections import defaultdict
 
 from flask import Flask, request, jsonify, send_file
-from flask_cors import CORS
 import lxml.html
 import openpyxl
 import openpyxl.styles
 
+ALLOWED_ORIGIN = "https://managementkas-five.vercel.app"
+
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
 app.config["MAX_CONTENT_LENGTH"] = 50 * 1024 * 1024
 
 
+@app.before_request
+def handle_preflight():
+    """Handle OPTIONS preflight — return immediately with CORS headers."""
+    if request.method == "OPTIONS":
+        response = app.make_default_options_response()
+        response.headers["Access-Control-Allow-Origin"] = ALLOWED_ORIGIN
+        response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+        response.headers["Access-Control-Allow-Headers"] = "Content-Type, Accept"
+        response.headers["Access-Control-Max-Age"] = "3600"
+        return response
+
+
 @app.after_request
-def after_request(response):
-    response.headers["Access-Control-Allow-Origin"] = "*"
+def add_cors_headers(response):
+    """Add CORS headers to EVERY response."""
+    response.headers["Access-Control-Allow-Origin"] = ALLOWED_ORIGIN
     response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
-    response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Accept"
     return response
 
 # ============================================================
